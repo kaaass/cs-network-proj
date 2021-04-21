@@ -50,7 +50,7 @@ namespace ftp2p {
         /**
          * 源地址
          */
-        Address destSrc = 0u;
+        Address addrDest = 0u;
 
         union {
             uint8_t packetType = 0u;
@@ -112,16 +112,16 @@ namespace ftp2p {
     };
 
     /**
-     * 协议报文
+     * 协议包
      */
-    struct ProtDiagram {};
+    struct ProtPacket {};
 
     /**
      * TODO 入网请求包。当 edge 节点请求加入网络时向网络中的一个 supernode 发送（目前只允许一个 supernode）
      * 包的源地址为 LOCAL 目标地址为 LINK_PEER。Join = 1
      * supernode 接收到后根据 identity 为结点分配网络地址，并增加路由 <edge, sock>
      */
-    struct ProtJoin : public ProtDiagram {
+    struct ProtJoin : public ProtPacket {
         // 身份识别标志，固定不变
         uint64_t identity = 0;
     };
@@ -130,7 +130,8 @@ namespace ftp2p {
      * TODO 入网请求回复包。分配相关地址
      * 包的源地址为 LOCAL 目标地址为分配的地址。Join = 1, Reply = 1
      */
-    struct ProtJoinReply : public ProtDiagram {
+    struct ProtJoinReply : public ProtPacket {
+        Address addrAllocated;
         // 信息/错误消息
         std::string info;
     };
@@ -140,7 +141,7 @@ namespace ftp2p {
      * Src = sedge 地址, Dest = dedge 地址, Route = 1
      * supernode 收到后向 dedge 发出建立路由中转包
      */
-    struct ProtRoute : public ProtDiagram {
+    struct ProtRoute : public ProtPacket {
         // sedge 开放的供 dedge 连接的 tcp 端口
         uint8_t tcpPort;
     };
@@ -150,7 +151,7 @@ namespace ftp2p {
      * Src = sedge 地址, Dest = dedge 地址, Route = 1, Forward = 1
      * dedge 收到后向 sedge 发出建立路由协商包
      */
-    struct ProtRouteForward : public ProtDiagram {
+    struct ProtRouteForward : public ProtPacket {
         // sedge 的 IPv4 地址
         uint32_t peerIpv4;
         // sedge 的开放端口
@@ -162,7 +163,7 @@ namespace ftp2p {
      * Src = dedge, Dest = sedge, Route = 1
      * sedge 收到后增加路由 <sedge, sock>，发出回复路由协商包
      */
-    struct ProtRouteNegotiate : public ProtDiagram {
+    struct ProtRouteNegotiate : public ProtPacket {
     };
 
     /**
@@ -170,7 +171,7 @@ namespace ftp2p {
      * Src = dedge, Dest = sedge, Route = 1, Reply = 1
      * dedge 收到增加路由 <dedge, sock>
      */
-    struct ProtRouteNegotiateReply : public ProtDiagram {
+    struct ProtRouteNegotiateReply : public ProtPacket {
     };
 
     /**
@@ -178,7 +179,7 @@ namespace ftp2p {
      * Src = sedge, Dest = dedge, Command = 1, Forward = Any
      * dedge 执行相关指令，发出指令结果包
      */
-    struct ProtCommand : public ProtDiagram {
+    struct ProtCommand : public ProtPacket {
         // 指令
         std::string command;
         // 指令参数
@@ -189,7 +190,7 @@ namespace ftp2p {
      * TODO 指令结果包。dedge <-...-> sedge
      * Src = dedge, Dest = sedge, Command = 1, Forward = Any, Reply = 1
      */
-    struct ProtCommandReply : public ProtDiagram {
+    struct ProtCommandReply : public ProtPacket {
         // 信息/错误消息
         std::string info;
         // 结果
@@ -200,7 +201,7 @@ namespace ftp2p {
      * TODO 缓冲区数据包。sedge <-...-> dedge
      * Src = sedge, Dest = dedge, Buffer = 1, Forward = Any
      */
-    struct ProtBuffer : public ProtDiagram {
+    struct ProtBuffer : public ProtPacket {
         // TODO
     };
 
@@ -208,7 +209,7 @@ namespace ftp2p {
      * TODO 缓冲区数据响应包。dedge <-...-> sedge
      * Src = sedge, Dest = dedge, Buffer = 1, Forward = Any, Reply = 1
      */
-    struct ProtBufferReply : public ProtDiagram {
+    struct ProtBufferReply : public ProtPacket {
         // TODO
     };
 }
