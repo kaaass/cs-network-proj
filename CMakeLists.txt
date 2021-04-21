@@ -11,6 +11,8 @@ file(GLOB_RECURSE src_files "src/*.c" "src/*.cc" "src/*.cpp" "src/*.h" "src/*.hp
 
 # Main Binary
 add_executable(cs_network main.cpp ${src_files})
+target_link_libraries(cs_network Threads::Threads json ${glog_LIBRARY} ${Unwind_LIBRARY})
+target_include_directories(cs_network PUBLIC ${glog_INCLUDE})
 add_coverage(cs_network)
 
 # Raw socket Binary
