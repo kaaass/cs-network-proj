@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.9)
 project(cs_network)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -14,9 +14,12 @@ add_executable(cs_network main.cpp ${src_files})
 target_link_libraries(cs_network Threads::Threads json ${glog_LIBRARY} ${Unwind_LIBRARY})
 target_include_directories(cs_network PUBLIC ${glog_INCLUDE})
 add_coverage(cs_network)
+message("${glog_INCLUDE} ${glog_LIBRARY} ${glog_DISTRIBUTION}")
 
 # Raw socket Binary
 add_executable(raw_socket raw_socket.cpp ${src_files})
+target_link_libraries(raw_socket ${glog_LIBRARY} ${Unwind_LIBRARY})
+target_include_directories(raw_socket PUBLIC ${glog_INCLUDE})
 add_coverage(raw_socket)
 
 # Unit Test

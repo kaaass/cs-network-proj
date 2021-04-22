@@ -10,7 +10,7 @@ if (glog_SOURCE)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} ${glog_DISTRIBUTION})
     execute_process(COMMAND ${CMAKE_COMMAND} ${glog_SOURCE}
             -DCMAKE_INSTALL_PREFIX=${glog_DISTRIBUTION}
-            -DBUILD_SHARED=${BUILD_SHARED_LIBS}
+            -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}
             -DBUILD_TESTING=NO
             WORKING_DIRECTORY ${glog_BUILD}
             )
@@ -31,9 +31,14 @@ if (glog_SOURCE)
 
         set(glog_LIBRARY optimized ${GLOG_LIBRARY_RELEASE} debug ${GLOG_LIBRARY_DEBUG})
     else ()
-        find_library(glog_LIBRARY glog
-                PATHS ${glog_DISTRIBUTION}
-                PATH_SUFFIXES lib lib64)
+        # FIXME
+#        find_library(glog_LIBRARY
+#                NAMES glog
+#                PATHS ${glog_DISTRIBUTION}
+#                PATH_SUFFIXES lib lib64)
+        set(glog_LIBRARY "${glog_DISTRIBUTION}/lib/libglog.so")
+
+        message(STATUS "${Green}Found Glog library at: ${glog_LIBRARY}${Reset}")
     endif ()
 
     message(STATUS "${Green}Found Glog include at: ${glog_SOURCE}${Reset}")
