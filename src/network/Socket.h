@@ -7,6 +7,9 @@
 #include <memory>
 #include <netinet/in.h>
 
+/**
+ * 套接字通用类（包括服务器 Socket）
+ */
 class Socket {
 
 private:

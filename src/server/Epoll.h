@@ -18,19 +18,11 @@ public:
     /**
      * 向 Epoll 增加监听的描述符
      */
-    bool addFd(int fd, uint32_t events);
-
-    bool addFd(int fd, uint32_t events, void *data);
-
     bool addFd(int fd, uint32_t events, epoll_data_t data);
 
     /**
      * 向 Epoll 更改描述符配置
      */
-    bool modifyFd(int fd, uint32_t events);
-
-    bool modifyFd(int fd, uint32_t events, void *data);
-
     bool modifyFd(int fd, uint32_t events, epoll_data_t data);
 
     /**
@@ -39,6 +31,13 @@ public:
     int wait(epoll_event *events, int timeLimit = -1) const;
 
     virtual ~Epoll();
+
+    template<typename T, typename... Args>
+    bool attach(uint32_t events, Args&&... _args) {
+        return (new T(_args...))->attachTo(this, events);
+    }
+
+    int getMaxEvents() const;
 
 public:
     int fd = -1;

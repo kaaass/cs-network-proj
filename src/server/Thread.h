@@ -3,6 +3,7 @@
 
 
 #include <thread>
+#include <string>
 
 /**
  * 线程基类
@@ -28,6 +29,10 @@ public:
 
     virtual ~Thread() = default;
 
+    const std::string &getName() const;
+
+    void setName(const std::string &pName);
+
 private:
 
     // 运行线程的实际处理函数，分发消息给对应线程
@@ -35,6 +40,8 @@ private:
 
 private:
     pthread_t handle = 0;
+
+    std::string name;
 };
 
 

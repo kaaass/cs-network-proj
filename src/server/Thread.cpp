@@ -15,3 +15,11 @@ void Thread::runThread(void *args) {
 bool Thread::join() const {
     return pthread_join(handle, nullptr) != 0;
 }
+
+const std::string &Thread::getName() const {
+    return name;
+}
+
+void Thread::setName(const std::string &pName) {
+    name = pName;
+}
