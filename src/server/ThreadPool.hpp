@@ -1,7 +1,7 @@
 #ifndef CS_NETWORK_THREADPOOL_HPP
 #define CS_NETWORK_THREADPOOL_HPP
 
-
+#include <glog/logging.h>
 #include <vector>
 
 /**
