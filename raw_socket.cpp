@@ -6,8 +6,15 @@
 #include<sys/socket.h>
 #include<arpa/inet.h>
 #include <algorithm>
+#include <glog/logging.h>
 
-int main() {
+int main(int argc, char **argv) {
+    // 日志配置
+    FLAGS_alsologtostderr = true;
+    FLAGS_minloglevel = 0;
+    google::InitGoogleLogging(argv[0]);
+    google::InstallFailureSignalHandler();
+
     // 创建 Raw Socket
     int sock = socket(PF_INET, SOCK_RAW, IPPROTO_TCP);
     if (sock == -1) {
