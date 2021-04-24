@@ -1,6 +1,5 @@
 #include <glog/logging.h>
 #include "Session.h"
-#include "../protocol/Protocol.h"
 
 #define READ_BUFFER_SIZE (1024 * 64)
 
@@ -64,18 +63,22 @@ void Session::processCommand(uint32_t readLen) {
 }
 
 void Session::say(const std::string &str) const {
+    LOG(INFO) << "Reply response: " << str;
     sendResponse(PLAIN_TEXT, ByteBuffer::str(str));
 }
 
 bool Session::sendResponse(ResponseType type, const ByteBuffer &buffer) const {
+    // Write len
+    uint32_t len = htonl(1 + buffer.size());
+    size_t n = connSocket->write(reinterpret_cast<const char *>(&len), 4);
     // Write type
     Byte bType = type;
-    size_t n = connSocket->write(reinterpret_cast<const char *>(&bType), 1);
+    n += connSocket->write(reinterpret_cast<const char *>(&bType), 1);
     // Write resp
     n += connSocket->write(reinterpret_cast<const char *>(buffer.data()), buffer.size());
     // check
-    if (n != buffer.size() + 1) {
-        LOG(WARNING) << "Cannot send response, resp = " << buffer.size() + 1 << ", n = " << n;
+    if (n != buffer.size() + 5) {
+        LOG(WARNING) << "Cannot send response, resp = " << buffer.size() + 5 << ", n = " << n;
         return false;
     }
     return true;

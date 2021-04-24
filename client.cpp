@@ -1,5 +1,10 @@
 #include <csignal>
 #include <glog/logging.h>
+#include "src/client/Client.h"
+
+void exit_normal(int) {
+    exit(0);
+}
 
 int main(int argc, char **argv) {
     // 初始化日志
@@ -8,9 +13,19 @@ int main(int argc, char **argv) {
     google::InitGoogleLogging(argv[0]);
     google::InstallFailureSignalHandler();
 
-    // 忽略 SIGPIPE 信号，避免 tcp 连接关闭后 write 直接退出程序
-    signal(SIGPIPE, SIG_IGN);
+    // SIGPIPE 信号直接退出
+    signal(SIGPIPE, exit_normal);
 
+    // 创建客户端
+    Client client;
+    client.srvAddress = "127.0.0.1";
+    client.srvPort = 8000;
+
+    // 初始化客户端
+    client.init();
+
+    // 启动客户端
+    client.start();
 
     return 0;
 }
