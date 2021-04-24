@@ -14,6 +14,7 @@ bool FdEventListener::modifyTo(Epoll *epoll, uint32_t events) {
 }
 
 [[noreturn]] void EpollEventReceiverThread::run() {
+    EventContext context {.thread = this};
     // 处理事件
     int cntEvent;
     while (true) {
@@ -22,7 +23,7 @@ bool FdEventListener::modifyTo(Epoll *epoll, uint32_t events) {
         for (int i = 0; i < cntEvent; ++i) {
             auto event = static_cast<FdEventListener *>(eventBuffer[i].data.ptr);
             // 调用事件处理
-            bool reserve = event->onEvent(eventBuffer[i].events);
+            bool reserve = event->onEvent(context, eventBuffer[i].events);
             // 回收事件对象
             if (!reserve) {
                 delete event;
