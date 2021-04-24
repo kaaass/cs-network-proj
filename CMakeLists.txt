@@ -9,12 +9,17 @@ include(externals/CMakeLists.txt)
 # Find source code
 file(GLOB_RECURSE src_files "src/*.c" "src/*.cc" "src/*.cpp" "src/*.h" "src/*.hpp")
 
-# Main Binary
-add_executable(cs_network main.cpp ${src_files})
-target_link_libraries(cs_network Threads::Threads json ${glog_LIBRARY} ${Unwind_LIBRARY})
-target_include_directories(cs_network PUBLIC ${glog_INCLUDE})
-add_coverage(cs_network)
-message("${glog_INCLUDE} ${glog_LIBRARY} ${glog_DISTRIBUTION}")
+# Server Binary
+add_executable(server server.cpp ${src_files})
+target_link_libraries(server Threads::Threads json ${glog_LIBRARY} ${Unwind_LIBRARY})
+target_include_directories(server PUBLIC ${glog_INCLUDE})
+add_coverage(server)
+
+# Client Binary
+add_executable(client client.cpp ${src_files})
+target_link_libraries(client Threads::Threads json ${glog_LIBRARY} ${Unwind_LIBRARY})
+target_include_directories(client PUBLIC ${glog_INCLUDE})
+add_coverage(client)
 
 # Raw socket Binary
 add_executable(raw_socket raw_socket.cpp ${src_files})
