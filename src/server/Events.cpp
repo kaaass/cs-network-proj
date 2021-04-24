@@ -1,4 +1,5 @@
 #include <memory>
+#include <glog/logging.h>
 #include "Events.h"
 
 bool FdEventListener::attachTo(Epoll *epoll, uint32_t events) {
@@ -14,6 +15,8 @@ bool FdEventListener::modifyTo(Epoll *epoll, uint32_t events) {
 }
 
 [[noreturn]] void EpollEventReceiverThread::run() {
+    LOG(INFO) << "EpollEventReceiverThread [" << getName() << "] started";
+    //
     EventContext context {.thread = this};
     // 处理事件
     int cntEvent;

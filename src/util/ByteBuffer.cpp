@@ -145,3 +145,12 @@ ByteBuffer &ByteBuffer::clear() {
 void ByteBuffer::allocate(size_t n) {
     bytes.assign(n, 0);
 }
+
+UInt ByteBuffer::readUInt(size_t pos) const {
+    uint32_t result = 0;
+    result |= bytes[pos] << 8u * 3;
+    result |= bytes[pos + 1] << 8u * 2;
+    result |= bytes[pos + 2] << 8u * 1;
+    result |= bytes[pos + 3];
+    return result;
+}

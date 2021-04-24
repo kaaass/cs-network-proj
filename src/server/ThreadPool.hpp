@@ -26,7 +26,6 @@ public:
 
     bool start() const {
         for (auto &thread : threads) {
-            LOG(INFO) << "Start thread: " << thread->getName();
             if (!thread->start()) {
                 PLOG(ERROR) << "Cannot start thread " << thread->getName();
                 return false;

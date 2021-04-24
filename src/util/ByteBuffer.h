@@ -152,6 +152,9 @@ public:
      */
     ByteBuffer &write(ULong uLong);
 
+    // 在某位置读入无符号 32 位整数
+    UInt readUInt(size_t pos) const;
+
     /**
      * 预分配缓冲区空间
      * @param size
