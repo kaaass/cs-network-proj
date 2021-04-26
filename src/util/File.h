@@ -12,7 +12,7 @@ class File {
 public:
     explicit File(FILE *file);
 
-    File(FILE *file, const std::string &path);
+    File(FILE *file, std::string path);
 
     virtual ~File();
 
@@ -24,7 +24,11 @@ public:
 
     ssize_t write(const ByteBuffer &buffer, ssize_t size);
 
+    ssize_t read(ByteBuffer &buffer, ssize_t limit = 0);
+
     static std::shared_ptr<File> open(const std::string &path, const std::string &mode);
+
+    static std::shared_ptr<File> popen(const std::string &command, const std::string &mode);
 
     const std::string &getPath() const;
 

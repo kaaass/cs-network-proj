@@ -2,6 +2,7 @@
 #include <unistd.h>
 
 #include <string>
+#include <utility>
 
 File::~File() {
     if (file != nullptr) {
@@ -38,7 +39,7 @@ ssize_t File::write(const ByteBuffer &buffer, ssize_t size) {
     return ::write(getFd(), reinterpret_cast<const void *>(buffer.data()), size);;
 }
 
-File::File(FILE *file, const std::string &path) : file(file), path(path) {}
+File::File(FILE *file, std::string path) : file(file), path(std::move(path)) {}
 
 const std::string &File::getPath() const {
     return path;
@@ -48,4 +49,20 @@ std::string File::getRealPath() const {
     char realPath[4096];
     realpath(path.c_str(), realPath);
     return realPath;
+}
+
+std::shared_ptr<File> File::popen(const std::string &command, const std::string &mode) {
+    FILE *file = ::popen(command.c_str(), mode.c_str());
+    if (file == nullptr) {
+        return nullptr;
+    }
+    return std::make_shared<File>(file, "");
+}
+
+ssize_t File::read(ByteBuffer &buffer, ssize_t limit) {
+    size_t size = std::min((size_t) limit, buffer.size());
+    if (size == 0) {
+        size = buffer.size();
+    }
+    return fread(buffer.data(), 1, size, file);
 }

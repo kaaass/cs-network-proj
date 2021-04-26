@@ -2,12 +2,11 @@
 #include <sys/sendfile.h>
 #include "Session.h"
 #include "../util/StringUtil.h"
-#include "../util/File.h"
 
 #define READ_BUFFER_SIZE (1024 * 64)
-#define PATH_MAX 256
+#define PATH_MAX 4096
 
-static std::string shareRoot = "share/";
+static std::string shareRoot = "share";
 
 void Session::then(SessionStatus pStatus) {
     status = pStatus;
@@ -61,12 +60,35 @@ void Session::processCommand(uint32_t readLen) {
     auto bufCmd = readBuffer.slice(1, readLen);
     bufCmd.write((uint16_t) 0);
     std::string cmd(reinterpret_cast<char *>(bufCmd.data()));
+    auto cmds = StringUtil::split(cmd, " ");
     // 解析指令
     LOG(INFO) << "Read command: " << cmd;
     if (cmd == "kill") {
         // 关闭会话
         say("Bye\n");
         then(END);
+        return;
+    } else if (cmds[0] == "ls" || cmds[0] == "list") {
+        // 列出目录内容
+        // 解析参数
+        if (cmds.size() != 2) {
+            say("list command takes exact 1 params!\n");
+            return;
+        }
+        auto path = validatePath(cmds[1]);
+        if (path.empty()) {
+            return;
+        }
+        // 运行 ls 指令
+        auto pFile = File::popen("ls -al " + path, "r");
+        auto cmdLen = pFile->read(readBuffer);
+        if (cmdLen == 0) {
+            // 目录不存在
+            say("Directory not existed!\n");
+            return;
+        }
+        ByteBuffer resultBuf = readBuffer.slice(0, cmdLen);
+        sendResponse(PLAIN_TEXT, resultBuf);
         return;
     }
     // 否则其余指令 Echo
@@ -134,16 +156,8 @@ bool Session::sendResponse(ResponseType type, const ByteBuffer &buffer) const {
 }
 
 std::shared_ptr<File> Session::openDownloadFile(const std::string &filepath) const {
-    char realPath[PATH_MAX];
-    char curPath[PATH_MAX];
-
-    // 转绝对地址
-    realpath((shareRoot + filepath).c_str(), realPath);
-    // 地址校验
-    getcwd(curPath, PATH_MAX);
-    strcat(curPath, ("/" + shareRoot).c_str());
-    if (strncmp(realPath, curPath, strlen(curPath)) != 0) {
-        say("Bad file path\n");
+    auto realPath = validatePath(filepath);
+    if (realPath.empty()) {
         return nullptr;
     }
 
@@ -203,4 +217,21 @@ void Session::handleWriting() {
         // 传输还未结束
         fileProcess->rest = rest;
     }
+}
+
+std::string Session::validatePath(const std::string& path) const {
+    char realPath[PATH_MAX];
+    char curPath[PATH_MAX];
+
+    // 转绝对地址
+    realpath((shareRoot + "/" + path).c_str(), realPath);
+    // 地址校验
+    getcwd(curPath, PATH_MAX);
+    strcat(curPath, ("/" + shareRoot).c_str());
+    if (strncmp(realPath, curPath, strlen(curPath)) != 0) {
+        say("Bad file path\n");
+        return "";
+    }
+
+    return realPath;
 }

@@ -49,10 +49,13 @@ void Client::start() {
 
 bool Client::sendCommand(const std::string &command) {
     auto cmds = StringUtil::split(command, " ");
+    if (cmds.empty()) {
+        return false;
+    }
     if (cmds[0] == "download" || cmds[0] == "dl") {
         // 下载指令
         if (cmds.size() != 3) {
-            printf("'download' takes exact 3 params\n");
+            printf("download takes exact 2 params\n");
             return false;
         }
         // 解析

@@ -50,6 +50,8 @@ private:
 
     std::shared_ptr<File> openDownloadFile(const std::string &filepath) const;
 
+    std::string validatePath(const std::string& path) const;
+
     // 下一步状态
     void then(SessionStatus status);
 
