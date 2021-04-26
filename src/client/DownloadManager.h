@@ -54,6 +54,7 @@ private:
     std::string srcPath;
     // 目标文件路径
     std::string destPath;
+public:
     // 总下载进度
     std::atomic<uint64_t> totalProgress;
     // 总大小

@@ -16,9 +16,17 @@
 class Client {
 
 public:
+    // 初始化
     void init();
 
-    void start();
+    // 连接服务器
+    void connect();
+
+    // 运行 repl 模式
+    void runRepl();
+
+    // 运行指令
+    void runCommand(const std::string& command);
 
 private:
 

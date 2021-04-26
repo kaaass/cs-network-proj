@@ -25,9 +25,15 @@ int main(int argc, char **argv) {
 
     // 初始化客户端
     client.init();
+    client.connect();
 
-    // 启动客户端
-    client.start();
+    if (argc == 2) {
+        // 执行单条指令
+        client.runCommand(argv[1]);
+    } else {
+        // 启动客户端
+        client.runRepl();
+    }
 
     return 0;
 }

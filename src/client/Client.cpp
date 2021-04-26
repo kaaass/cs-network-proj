@@ -14,40 +14,12 @@ void Client::init() {
     downloadManager.init();
 }
 
-void Client::start() {
+void Client::connect() {
     // 连接服务器
     socket = Socket::connect(srvAddress, srvPort);
     if (!socket) {
         PLOG(FATAL) << "Cannot connect to server";
         exit(1);
-    }
-
-    // 欢迎消息
-    std::string welcome =
-            "SiFtp - Simple multi-thread Ftp client\n"
-            "Version: v1.0\n";
-    std::cout << welcome << std::endl;
-
-    // 指令执行循环
-    std::string command;
-    bool sent;
-    while (active) {
-        fprintf(stdout, "> ");
-        fflush(stdout);
-        // 读入键盘输入
-        std::getline(std::cin, command);
-        LOG(INFO) << "Read command: '" << command << "'";
-        // 发送指令
-        sent = sendCommand(command);
-        if (!sent) {
-            printf("Failed to send command\n");
-            continue;
-        }
-        // 处理返回
-        handleResponse();
-        // 处理退出
-        if (command == "kill")
-            active = false;
     }
 }
 
@@ -135,9 +107,51 @@ void Client::handleDownloadInfo(const ByteBuffer &response) {
     auto ret = downloadManager.downloadWait(srcFile, destFile, resp.size);
     // 完成写入
     if (ret) {
-        printf("Successful write %lu bytes to file %s.\n",
+        printf("Successful written %lu Bytes (%0.3lf MB/s) to file %s.\n",
                resp.size,
+               downloadManager.averageSpeed / (1024. * 1024.),
                destFile->getRealPath().c_str());
     }
     destFile = nullptr;
+}
+
+void Client::runCommand(const std::string &command) {
+    // 发送指令
+    bool sent = sendCommand(command);
+    if (!sent) {
+        printf("Failed to send command\n");
+        return;
+    }
+    // 处理返回
+    handleResponse();
+}
+
+void Client::runRepl() {
+    // 欢迎消息
+    std::string welcome =
+            "SiFtp - Simple multi-thread Ftp client\n"
+            "Version: v1.0\n";
+    std::cout << welcome << std::endl;
+
+    // 指令执行循环
+    std::string command;
+    bool sent;
+    while (active) {
+        fprintf(stdout, "> ");
+        fflush(stdout);
+        // 读入键盘输入
+        std::getline(std::cin, command);
+        LOG(INFO) << "Read command: '" << command << "'";
+        // 发送指令
+        sent = sendCommand(command);
+        if (!sent) {
+            printf("Failed to send command\n");
+            continue;
+        }
+        // 处理返回
+        handleResponse();
+        // 处理退出
+        if (command == "kill")
+            active = false;
+    }
 }
