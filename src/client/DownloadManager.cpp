@@ -1,10 +1,9 @@
 #include "DownloadManager.h"
 
-#include <utility>
 #include "Client.h"
 
 #define READ_BUFFER_PER_THREAD (64 * 1048576)
-#define PART_SIZE (32 * 1048576)
+#define PART_SIZE (64 * 1048576)
 
 void DownloadManager::init() {
     // 初始化下载缓冲区
@@ -14,19 +13,19 @@ void DownloadManager::init() {
     }
 }
 
-bool DownloadManager::downloadWait(const std::string &srcFile, const std::shared_ptr<File>& destFile, uint64_t size) {
+bool DownloadManager::downloadWait(const std::string &srcFile, const std::shared_ptr<File> &destFile, uint64_t size) {
     srcPath = srcFile;
     destPath = destFile->getRealPath();
     totalProgress = 0;
     totalSize = size;
+    parts.clear();
+    usingOffsets.clear();
     // 初始化线程池
     threadPool = std::make_unique<ThreadPool<DownloadThread>>(
             "DownloadPool", Client::INSTANCE->downloadThreads, this);
     auto &threads = threadPool->lists();
-    for (int i = 0; i < threads.size(); i++) {
-        threads[i]->readBuffer = readBuffers[i];
-    }
     // 检查断点续传
+    uint32_t nPart;
     if (false) {
         // 继续下载
         // 读取下载状态文件
@@ -36,21 +35,28 @@ bool DownloadManager::downloadWait(const std::string &srcFile, const std::shared
         // 预分配文件大小
         destFile->allocate(size);
         // 划分下载分块
-        parts.clear();
         uint64_t curPos = 0;
         auto rest = size;
-        while (rest >= PART_SIZE + (PART_SIZE >> 1)) {
-            parts.emplace_back(curPos, 0, PART_SIZE);
+        nPart = 0;
+        while (rest >= PART_SIZE) {
+            parts.emplace_back(nPart++, curPos, PART_SIZE, PART_SIZE);
             curPos += PART_SIZE;
             rest -= PART_SIZE;
         }
         if (rest > 0) {
-            parts.emplace_back(curPos, 0, rest);
+            parts.emplace_back(nPart++, curPos, rest, rest);
         }
         // 生成下载状态文件
         // TODO
     }
+    usingOffsets.assign(nPart, 0);
+    // 设置线程池参数：读缓冲、开始搜索位置
+    for (int i = 0; i < threads.size(); i++) {
+        threads[i]->readBuffer = readBuffers[i];
+        threads[i]->startPart = i * nPart / threads.size();
+    }
     // 准备下载
+    start = std::chrono::system_clock::now();
     bool ret = threadPool->start();
     if (!ret) {
         perror("Download failed! ");
@@ -65,8 +71,12 @@ bool DownloadManager::downloadWait(const std::string &srcFile, const std::shared
     return true;
 }
 
-void DownloadManager::updateDownloadStatus(PartStatus *part) {
-    LOG(INFO) << "Download progress: " << double(totalProgress) / totalSize * 100 << "%";
+void DownloadManager::updateDownloadStatus() {
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end - start;
+    averageSpeed = double(totalProgress) / elapsed_seconds.count();
+    LOG(INFO) << "Download progress: " << double(totalProgress) / totalSize * 100 << "%, "
+        << (averageSpeed / (1024. * 1024.)) << "MB/s";
     // TODO 状态文件
 }
 
@@ -75,28 +85,33 @@ void DownloadThread::run() {
     destFile = File::open(manager->destPath, "r+b");
     // 开始下载
     bool finish = false;
+    auto &partsLock = manager->partsLock;
+    auto &usingOffsets = manager->usingOffsets;
+    auto &parts = manager->parts;
+    auto nParts = parts.size();
     while (!finish) {
         // 找未完成块并占有
-        while (part == nullptr) {
-            finish = true;
-            for (auto &cur : manager->parts) {
-                if (cur.progress != cur.size) {
-                    finish = false;
-                    // 发现未完成块，检查占有情况
-                    {
-                        std::lock_guard<std::mutex> guard(manager->partsLock);
-                        if (manager->usingOffsets.count(cur.offset) == 0) {
+        {
+            std::lock_guard<std::mutex> guard(partsLock);
+            while (part == nullptr) {
+                finish = true;
+                for (size_t i = startPart; i < nParts; i++) {
+                    auto &cur = parts[i];
+                    if (cur.rest) {
+                        finish = false;
+                        // 发现未完成块，检查占有情况
+                        if (!usingOffsets[cur.id]) {
                             // 未被占用则选定此块
-                            manager->usingOffsets.insert(cur.offset);
+                            usingOffsets[cur.id] = 1;
                             part = &cur;
                             break;
                         }
                     }
                 }
-            }
-            // 如果完成下载，就直接结束线程
-            if (finish) {
-                return;
+                // 如果完成下载，就直接结束线程
+                if (finish) {
+                    return;
+                }
             }
         }
         LOG(INFO) << "Select file part thread = " << getName() << ", offset = " << part->offset;
@@ -108,27 +123,21 @@ void DownloadThread::run() {
         downloadPart();
         // 释放占有块
         {
-            std::lock_guard<std::mutex> guard(manager->partsLock);
-            manager->usingOffsets.erase(part->offset);
+            std::lock_guard<std::mutex> guard(partsLock);
+            usingOffsets[part->id] = 0;
             part = nullptr;
         }
-        // 检查下载是否完成
-        finish = true;
-        for (auto &cur : manager->parts) {
-            if (cur.progress != cur.size) {
-                finish = false;
-                break;
-            }
-        }
+        // 循环更新 startPart
+        startPart = (startPart + 1) % nParts;
     }
 }
 
 void DownloadThread::downloadPart() {
     if (part == nullptr) return;
-    auto rest = part->size - part->progress;
+    auto rest = part->rest;
     // 发送下载请求
     DownloadRequestPacket req{
-            .offset = part->offset + part->progress,
+            .offset = part->offset + part->size - rest,
             .size = rest,
     };
     ByteBuffer data(&req, sizeof(req));
@@ -153,7 +162,7 @@ void DownloadThread::downloadPart() {
     }
     // 接受文件
     ssize_t receive, written;
-    destFile->seek(part->offset + part->progress);
+    destFile->seek(req.offset);
     while (rest > 0) {
         // 读入数据
         receive = connSocket->read(*readBuffer, std::min(readBuffer->size(), rest));
@@ -173,14 +182,14 @@ void DownloadThread::downloadPart() {
         // 减去剩余
         rest -= receive;
         // 更新进度
-        part->progress = part->size - rest;
+        part->rest = rest;
         manager->totalProgress += written;
-        manager->updateDownloadStatus(part);
+        manager->updateDownloadStatus();
     }
     LOG(INFO) << "Part downloaded: offset = " << part->offset << ", size = " << part->size;
 }
 
 DownloadThread::DownloadThread(DownloadManager *manager) : manager(manager) {}
 
-PartStatus::PartStatus(uint64_t offset, uint64_t progress, uint64_t size) : offset(offset), progress(progress),
-                                                                            size(size) {}
+PartStatus::PartStatus(uint32_t id, uint64_t offset, uint64_t rest, uint64_t size) :
+        id(id), offset(offset), rest(rest), size(size) {}

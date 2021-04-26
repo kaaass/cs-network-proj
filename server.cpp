@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
 
     // 创建服务器
     Server server;
-    server.threadNum = 5;
+    server.threadNum = 10;
     server.port = 8000;
     server.maxConn = 50;
 

@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
     auto &client = *Client::INSTANCE;
     client.srvAddress = "127.0.0.1";
     client.srvPort = 8000;
-    client.downloadThreads = 5;
+    client.downloadThreads = 10;
 
     // 初始化客户端
     client.init();

@@ -12,10 +12,11 @@
 
 // 片段下载进度
 struct PartStatus {
-    PartStatus(uint64_t offset, uint64_t progress, uint64_t size);
+    PartStatus(uint32_t id, uint64_t offset, uint64_t rest, uint64_t size);
 
+    uint32_t id;
     uint64_t offset;
-    uint64_t progress;
+    uint64_t rest;
     uint64_t size;
 };
 
@@ -36,7 +37,7 @@ public:
 private:
 
     // 更新下载状态
-    void updateDownloadStatus(PartStatus *part);
+    void updateDownloadStatus();
 
 private:
     // 下载缓冲区
@@ -45,8 +46,8 @@ private:
     std::unique_ptr<ThreadPool<DownloadThread>> threadPool;
     // 下载进度
     std::vector<PartStatus> parts;
-    // 下载中段偏移表，修改时必须锁 partsLock
-    std::set<uint64_t> usingOffsets;
+    // 下载中段偏移表，访问修改时必须锁 partsLock
+    std::vector<uint8_t> usingOffsets;
     // 下载进度占用锁
     std::mutex partsLock;
     // 下载源文件路径
@@ -57,6 +58,10 @@ private:
     std::atomic<uint64_t> totalProgress;
     // 总大小
     uint64_t totalSize;
+    // 开始下载时间
+    std::chrono::system_clock::time_point start;
+    // 平均下载速度 (Bytes/s)
+    double averageSpeed;
 };
 
 /**
@@ -84,6 +89,8 @@ private:
     std::shared_ptr<Socket> connSocket;
     // 线程私有目标文件
     std::shared_ptr<File> destFile;
+    // 线程寻找任务段
+    size_t startPart = 0;
 };
 
 #endif //CS_NETWORK_DOWNLOADMANAGER_H
