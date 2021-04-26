@@ -22,7 +22,7 @@ target_include_directories(client PUBLIC ${glog_INCLUDE})
 add_coverage(client)
 
 # Raw socket Binary
-add_executable(raw_socket raw_socket.cpp ${src_files})
+add_executable(raw_socket raw_socket.cpp)
 target_link_libraries(raw_socket ${glog_LIBRARY} ${Unwind_LIBRARY})
 target_include_directories(raw_socket PUBLIC ${glog_INCLUDE})
 add_coverage(raw_socket)

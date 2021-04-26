@@ -1,10 +1,10 @@
-#include<cstdio>
-#include<cstdlib>
-#include<cstring>
-#include<netinet/ip.h>
-#include<netinet/tcp.h>
-#include<sys/socket.h>
-#include<arpa/inet.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <netinet/ip.h>
+#include <netinet/tcp.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 #include <algorithm>
 #include <glog/logging.h>
 
@@ -24,7 +24,6 @@ int main(int argc, char **argv) {
 
     // 开始读入数据
     auto *buffer = new unsigned char[65536];
-    in_addr ip_src_addr{}, ip_dest_addr{};
     int packet_size;
 
     while (true) {
@@ -46,13 +45,13 @@ int main(int argc, char **argv) {
         printf("  Packet Size (bytes): %15hu\n", ntohs(ip_pdu->ip_len));
         printf("  Identification:      %15hu\n", ntohs(ip_pdu->ip_id));
         printf("  Time To Alive:       %15u\n", ip_pdu->ip_ttl);
-        auto ip_off = ntohs(ip_pdu->ip_off);
+        auto ip_off = ntohs(ip_pdu->ip_off);  // 片段偏移掩码前需要翻转字节序
         printf("  Mark:         RF = %d; DF = %d; MF = %d\n",
                !!(ip_off & IP_RF), !!(ip_off & IP_DF), !!(ip_off & IP_MF));
         printf("  Fragment Offset:     %15u\n", ip_off & IP_OFFMASK);
 
         // 解析 TCP 首部
-        auto *tcp_pdu = (tcphdr *) (buffer + ip_pdu->ip_hl * 4u);
+        auto *tcp_pdu = (tcphdr *) (buffer + ip_pdu->ip_hl * 4u);  // 计算偏移，跳过 IP 首部
 
         printf("-------- Transport Layer  (TCP) --------\n");
         printf("  Src port:            %15hu\n", ntohs(tcp_pdu->th_sport));
