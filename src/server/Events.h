@@ -39,7 +39,7 @@ public:
 };
 
 /**
- * Epoll 事件接受线程
+ * Epoll 事件接受线程，实现 Reactor 模式
  */
 class EpollEventReceiverThread : public Thread {
 public:

@@ -6,7 +6,6 @@
 
 #include "Events.h"
 #include "../network/Socket.h"
-#include "../server.h"
 #include "ThreadPool.hpp"
 #include "Session.h"
 
