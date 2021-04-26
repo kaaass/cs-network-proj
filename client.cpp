@@ -17,9 +17,11 @@ int main(int argc, char **argv) {
     signal(SIGPIPE, exit_normal);
 
     // 创建客户端
-    Client client;
+    Client::INSTANCE = std::make_unique<Client>();
+    auto &client = *Client::INSTANCE;
     client.srvAddress = "127.0.0.1";
     client.srvPort = 8000;
+    client.downloadThreads = 5;
 
     // 初始化客户端
     client.init();

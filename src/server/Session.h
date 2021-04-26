@@ -35,7 +35,7 @@ public:
     void processCommand(uint32_t readLen);
 
     // 处理下载请求
-    void processDownload(uint32_t readLen);
+    void processDownload(uint32_t readLen, bool infoOnly);
 
     // 处理文件写出
     void handleWriting();

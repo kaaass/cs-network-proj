@@ -3,6 +3,7 @@
 
 #include <glog/logging.h>
 #include <vector>
+#include <memory>
 
 /**
  * 线程池
@@ -20,7 +21,7 @@ public:
         }
     }
 
-    const std::vector<std::unique_ptr<T>> &lists() const {
+    std::vector<std::unique_ptr<T>> &lists() {
         return threads;
     }
 
@@ -32,6 +33,17 @@ public:
             }
         }
         return true;
+    }
+
+    bool joinAll() const {
+        int ret = true;
+        for (auto &thread : threads) {
+            if (!thread->join()) {
+                PLOG(INFO) << "Cannot join thread " << thread->getName();
+                ret = false;
+            }
+        }
+        return ret;
     }
 
 private:

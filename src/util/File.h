@@ -26,6 +26,9 @@ public:
 
     ssize_t read(ByteBuffer &buffer, ssize_t limit = 0);
 
+    // 预分配文件
+    bool allocate(off_t len, off_t offset = 0);
+
     static std::shared_ptr<File> open(const std::string &path, const std::string &mode);
 
     static std::shared_ptr<File> popen(const std::string &command, const std::string &mode);

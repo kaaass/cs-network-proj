@@ -3,6 +3,7 @@
 
 #include <string>
 #include <utility>
+#include <fcntl.h>
 
 File::~File() {
     if (file != nullptr) {
@@ -65,4 +66,8 @@ ssize_t File::read(ByteBuffer &buffer, ssize_t limit) {
         size = buffer.size();
     }
     return fread(buffer.data(), 1, size, file);
+}
+
+bool File::allocate(off_t len, off_t offset) {
+    return fallocate(getFd(), 0, offset, len) != 0;
 }

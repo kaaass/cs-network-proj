@@ -35,7 +35,11 @@ void Session::handle(const EventContext &context) {
                 return;
             case DOWNLOAD:
                 // 处理下载请求
-                processDownload(readLen);
+                processDownload(readLen, false);
+                return;
+            case DOWNLOAD_INFO:
+                // 处理下载请求
+                processDownload(readLen, true);
                 return;
         }
         // 不符合协议直接关闭
@@ -95,7 +99,7 @@ void Session::processCommand(uint32_t readLen) {
     say("Unrecognised command: " + cmd + "\n");
 }
 
-void Session::processDownload(uint32_t readLen) {
+void Session::processDownload(uint32_t readLen, bool infoOnly) {
     // 防止缓冲区溢出
     if (readLen < 1 + sizeof(DownloadRequestPacket))
         return;
@@ -122,14 +126,16 @@ void Session::processDownload(uint32_t readLen) {
         return;
     }
     // 发送下载头部
-    BinaryResponsePacket resp{
-        .size = fileSize
+    DownloadInfoPacket resp{
+        .size = req.size
     };
-    sendResponse(BINARY, ByteBuffer(&resp, sizeof(BinaryResponsePacket)));
+    sendResponse(infoOnly ? DOWNLOAD_INFO_REPLY : BINARY, ByteBuffer(&resp, sizeof(DownloadInfoPacket)));
     // 设置下载状态
-    fileProcess = std::make_unique<FileProcess>(file, req.size);
-    file->seek(req.offset);
-    then(WRITING);
+    if (!infoOnly) {
+        fileProcess = std::make_unique<FileProcess>(file, req.size);
+        file->seek(req.offset);
+        then(WRITING);
+    }
 }
 
 void Session::say(const std::string &str) const {

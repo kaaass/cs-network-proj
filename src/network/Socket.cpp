@@ -118,7 +118,7 @@ ssize_t Socket::read(ByteBuffer &buffer, ssize_t limit) const {
         ssize_t ret = ::read(fdSocket, buffer.data() + sizeRead, std::min(limit, (ssize_t) READ_UNIT));
         if (ret < 0) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                // 结束读
+                // 非阻塞情况结束读
                 break;
             } else {
                 PLOG(WARNING) << "Socket read end unexpectedly";

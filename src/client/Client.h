@@ -8,19 +8,7 @@
 #include "../network/Socket.h"
 #include "../protocol/Protocol.h"
 #include "../util/File.h"
-
-// 文件接受过程
-struct FileReceiveProcess {
-    FileReceiveProcess(std::shared_ptr<File> destFile, size_t rest, uint64_t size)
-            : destFile(std::move(destFile)), rest(rest), totalSize(size) {}
-
-    // 目标文件
-    std::shared_ptr<File> destFile;
-    // 剩余数量
-    size_t rest;
-    // 文件总大小
-    uint64_t totalSize;
-};
+#include "DownloadManager.h"
 
 /**
  * 客户端类
@@ -39,11 +27,7 @@ private:
 
     bool sendCommand(const std::string &command);
 
-    bool sendRequest(RequestType type, const ByteBuffer &buffer) const;
-
-    std::shared_ptr<ResponsePacket> receiveResponse();
-
-    void handleBinary(const ByteBuffer &response);
+    void handleDownloadInfo(const ByteBuffer &response);
 
 private:
 
@@ -53,12 +37,22 @@ private:
     bool active = true;
     // 读入缓冲区
     ByteBuffer readBuffer;
-    // 传输过程信息
-    std::unique_ptr<FileReceiveProcess> fileReceiveProcess;
+    // 下载管理
+    DownloadManager downloadManager;
+    // 目标文件
+    std::shared_ptr<File> destFile;
+    // 源文件路径
+    std::string srcFile;
 
 public:
+    // 服务器地址
     std::string srvAddress;
+    // 服务器端口
     uint16_t srvPort;
+    // 下载线程数
+    int downloadThreads;
+
+    static std::unique_ptr<Client> INSTANCE;
 };
 
 
