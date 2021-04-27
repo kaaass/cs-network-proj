@@ -40,6 +40,12 @@ public:
     // 处理文件写出
     void handleWriting();
 
+    // 绑定线程缓存
+    void attachBuffer(std::shared_ptr<ByteBuffer> buf);
+
+    // 解绑线程缓冲
+    void detachBuffer();
+
     SessionStatus getStatus() const;
 
 private:
@@ -64,7 +70,7 @@ private:
     std::shared_ptr<Socket> connSocket;
 
     // 读入缓冲
-    ByteBuffer readBuffer;
+    std::shared_ptr<ByteBuffer> readBuffer;
 
     // 文件传输进度
     std::unique_ptr<FileProcess> fileProcess;

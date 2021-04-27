@@ -3,7 +3,6 @@
 #include "Session.h"
 #include "../util/StringUtil.h"
 
-#define READ_BUFFER_SIZE (1024 * 64)
 #define PATH_MAX 4096
 
 static std::string shareRoot = "share";
@@ -16,10 +15,10 @@ void Session::handle(const EventContext &context) {
     if (status == READING) {
         // 允许请求包的读入并回复短包
         // 读入长度
-        connSocket->read(readBuffer, 4);
-        uint32_t packetLen = readBuffer.readUInt(0);
+        connSocket->read(*readBuffer, 4);
+        uint32_t packetLen = readBuffer->readUInt(0);
         // 读入包
-        ssize_t readLen = connSocket->read(readBuffer, packetLen);
+        ssize_t readLen = connSocket->read(*readBuffer, packetLen);
         if (readLen <= 0) {
             if (readLen == -1)
                 then(END);
@@ -27,7 +26,7 @@ void Session::handle(const EventContext &context) {
         }
         LOG(INFO) << "Read request packet plen = " << packetLen << ", rlen = " << readLen;
         // 分别处理
-        Byte type = readBuffer[0];
+        Byte type = (*readBuffer)[0];
         switch (type) {
             case COMMAND:
                 // 处理指令请求
@@ -56,12 +55,11 @@ SessionStatus Session::getStatus() const {
 }
 
 Session::Session(std::shared_ptr<Socket> connSocket) : connSocket(std::move(connSocket)) {
-    readBuffer.allocate(READ_BUFFER_SIZE);
 }
 
 void Session::processCommand(uint32_t readLen) {
     // 读入指令
-    auto bufCmd = readBuffer.slice(1, readLen);
+    auto bufCmd = readBuffer->slice(1, readLen);
     bufCmd.write((uint16_t) 0);
     std::string cmd(reinterpret_cast<char *>(bufCmd.data()));
     auto cmds = StringUtil::split(cmd, " ");
@@ -86,13 +84,13 @@ void Session::processCommand(uint32_t readLen) {
         }
         // 运行 ls 指令
         auto pFile = File::popen("ls -al " + path, "r");
-        auto cmdLen = pFile->read(readBuffer);
+        auto cmdLen = pFile->read(*readBuffer);
         if (cmdLen == 0) {
             // 目录不存在
             say("Directory not existed!\n");
             return;
         }
-        ByteBuffer resultBuf = readBuffer.slice(0, cmdLen);
+        ByteBuffer resultBuf = readBuffer->slice(0, cmdLen);
         sendResponse(PLAIN_TEXT, resultBuf);
         return;
     }
@@ -105,9 +103,9 @@ void Session::processDownload(uint32_t readLen, bool infoOnly) {
     if (readLen < 1 + sizeof(DownloadRequestPacket))
         return;
     // 读入结构体
-    DownloadRequestPacket req = *reinterpret_cast<DownloadRequestPacket *>(readBuffer.data() + 1);
+    DownloadRequestPacket req = *reinterpret_cast<DownloadRequestPacket *>(readBuffer->data() + 1);
     // 读入文件路径
-    auto bufFile = readBuffer.slice(1 + sizeof(DownloadRequestPacket), readLen);
+    auto bufFile = readBuffer->slice(1 + sizeof(DownloadRequestPacket), readLen);
     bufFile.write((uint16_t) 0);
     std::string filepath(reinterpret_cast<char *>(bufFile.data()));
     // 处理
@@ -241,4 +239,12 @@ std::string Session::validatePath(const std::string& path) const {
     }
 
     return realPath;
+}
+
+void Session::attachBuffer(std::shared_ptr<ByteBuffer> buf) {
+    readBuffer = std::move(buf);
+}
+
+void Session::detachBuffer() {
+    readBuffer = nullptr;
 }

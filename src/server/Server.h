@@ -10,6 +10,18 @@
 #include "Session.h"
 
 /**
+ * 服务器线程，接收 Epoll 事件
+ */
+class ServerThread : public EpollEventReceiverThread {
+public:
+    explicit ServerThread(const std::shared_ptr<Epoll> &epoll);
+
+    friend class ConnectionListener;
+private:
+    std::shared_ptr<ByteBuffer> localReadBuffer;
+};
+
+/**
  * 服务器
  */
 class Server {
@@ -36,7 +48,7 @@ public:
     static std::unique_ptr<Server> INSTANCE;
 
 private:
-    std::unique_ptr<ThreadPool<EpollEventReceiverThread>> threadPool;
+    std::unique_ptr<ThreadPool<ServerThread>> threadPool;
 };
 
 /**
