@@ -62,6 +62,9 @@ bool Client::sendCommand(const std::string &command) {
             destFile = nullptr;
         }
         return ret;
+    } else if (command == "quit" || command == "q") {
+        // 处理退出
+        active = false;
     }
     // 远端指令
     return ProtocolHelper::sendRequest(socket, COMMAND, ByteBuffer::str(command));
@@ -160,8 +163,5 @@ void Client::runRepl() {
         }
         // 处理返回
         handleResponse();
-        // 处理退出
-        if (command == "kill")
-            active = false;
     }
 }
