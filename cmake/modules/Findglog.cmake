@@ -36,7 +36,7 @@ if (glog_SOURCE)
 #                NAMES glog
 #                PATHS ${glog_DISTRIBUTION}
 #                PATH_SUFFIXES lib lib64)
-        set(glog_LIBRARY "${glog_DISTRIBUTION}/lib/libglog.so")
+        set(glog_LIBRARY "${glog_DISTRIBUTION}/lib/libglog.a")
 
         message(STATUS "${Green}Found Glog library at: ${glog_LIBRARY}${Reset}")
     endif ()
