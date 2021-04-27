@@ -33,6 +33,8 @@ public:
 
     void setName(const std::string &pName);
 
+    pthread_t getHandle() const;
+
 private:
 
     // 运行线程的实际处理函数，分发消息给对应线程

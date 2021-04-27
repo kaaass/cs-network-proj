@@ -88,6 +88,12 @@ void Server::start() {
     threadPool->lists()[0]->join();
 }
 
+void Server::kill() {
+    // 关闭服务器
+    active = false;
+    threadPool->kill();
+}
+
 ServerThread::ServerThread(const std::shared_ptr<Epoll> &epoll)
         : EpollEventReceiverThread(epoll) {
     localReadBuffer = std::make_shared<ByteBuffer>();

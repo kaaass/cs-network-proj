@@ -2,6 +2,7 @@
 #include <sys/sendfile.h>
 #include "Session.h"
 #include "../util/StringUtil.h"
+#include "Server.h"
 
 #define PATH_MAX 4096
 
@@ -92,6 +93,11 @@ void Session::processCommand(uint32_t readLen) {
         }
         ByteBuffer resultBuf = readBuffer->slice(0, cmdLen);
         sendResponse(PLAIN_TEXT, resultBuf);
+        return;
+    } else if (cmd == "shutdown") {
+        // 关闭服务器
+        say("Shutdown server...\n");
+        Server::INSTANCE->kill();
         return;
     }
     // 否则其余指令 Echo

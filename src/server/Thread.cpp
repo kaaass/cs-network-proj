@@ -23,3 +23,7 @@ const std::string &Thread::getName() const {
 void Thread::setName(const std::string &pName) {
     name = pName;
 }
+
+pthread_t Thread::getHandle() const {
+    return handle;
+}

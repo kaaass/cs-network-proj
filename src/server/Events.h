@@ -45,7 +45,7 @@ class EpollEventReceiverThread : public Thread {
 public:
     explicit EpollEventReceiverThread(std::shared_ptr<Epoll> epoll);
 
-    [[noreturn]] void run() override;
+    void run() override;
 
     ~EpollEventReceiverThread() override;
 

@@ -4,6 +4,7 @@
 #include <glog/logging.h>
 #include <vector>
 #include <memory>
+#include <csignal>
 
 /**
  * 线程池
@@ -44,6 +45,21 @@ public:
             }
         }
         return ret;
+    }
+
+    void kill() const {
+        auto self = pthread_self();
+        bool suicide = false;
+        for (auto &thread : threads) {
+            if (self != thread->getHandle()) {
+                pthread_kill(thread->getHandle(), SIGKILL);
+            } else {
+                suicide = true;
+            }
+        }
+        if (suicide) {
+            pthread_kill(self, SIGKILL);
+        }
     }
 
 private:

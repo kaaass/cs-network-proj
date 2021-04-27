@@ -1,6 +1,7 @@
 #include <memory>
 #include <glog/logging.h>
 #include "Events.h"
+#include "Server.h"
 
 bool FdEventListener::attachTo(Epoll *epoll, uint32_t events) {
     return epoll->addFd(fd, events, {
@@ -14,13 +15,13 @@ bool FdEventListener::modifyTo(Epoll *epoll, uint32_t events) {
     });
 }
 
-[[noreturn]] void EpollEventReceiverThread::run() {
+void EpollEventReceiverThread::run() {
     LOG(INFO) << "EpollEventReceiverThread [" << getName() << "] started";
     //
     EventContext context {.thread = this};
     // 处理事件
     int cntEvent;
-    while (true) {
+    while (Server::INSTANCE->active) {
         // 读入事件
         cntEvent = epoll->wait(eventBuffer);
         for (int i = 0; i < cntEvent; ++i) {

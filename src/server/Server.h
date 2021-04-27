@@ -33,8 +33,12 @@ public:
     // 启动服务器
     void start();
 
+    // 关闭服务器
+    void kill();
+
 public:
     static std::shared_ptr<Epoll> epoll;
+    bool active = true;
 
     // Config
 

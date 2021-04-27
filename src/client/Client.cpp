@@ -62,7 +62,7 @@ bool Client::sendCommand(const std::string &command) {
             destFile = nullptr;
         }
         return ret;
-    } else if (command == "quit" || command == "q") {
+    } else if (command == "quit" || command == "q" || command == "shutdown") {
         // 处理退出
         active = false;
     }
