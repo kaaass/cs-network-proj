@@ -48,7 +48,7 @@ std::ostream &operator<<(std::ostream &out, const ByteBuffer &buffer) {
     for (ULong i = 0; i < buffer.bytes.size(); i++) {
         if (i > 0)
             out << " ";
-        out << buffer.bytes[i].toHexString().c_str();
+        out << LittleEndianByte(buffer.bytes[i]).toHexString().c_str();
     }
     return out;
 }

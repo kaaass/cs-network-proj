@@ -64,6 +64,6 @@ union LittleEndianByte {
  * 比特序为小端，即低比特在低地址，高比特在高地址
  * 即大部分内存的存储格式
  */
-typedef LittleEndianByte Byte;
+typedef uint8_t Byte;
 
 #endif //NEWS_BLOCKCHAIN_BYTE_H
