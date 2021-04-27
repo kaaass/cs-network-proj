@@ -30,8 +30,10 @@ public:
     int threadNum;
     // 监听端口
     int port;
-    // 最大连接数
-    int maxConn;
+    // 最大连接队列（accept 执行前允许维持的连接数）
+    int maxListenQueue;
+
+    static std::unique_ptr<Server> INSTANCE;
 
 private:
     std::unique_ptr<ThreadPool<EpollEventReceiverThread>> threadPool;

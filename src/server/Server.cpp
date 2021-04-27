@@ -1,6 +1,7 @@
 #include "Server.h"
 #include <glog/logging.h>
 
+std::unique_ptr<Server> Server::INSTANCE;
 std::shared_ptr<Epoll> Server::epoll;
 
 bool ServerSocketListener::onEvent(const EventContext &context, uint32_t events) {
@@ -46,7 +47,7 @@ bool ConnectionListener::onEvent(const EventContext &context, uint32_t events) {
 
 void Server::init() {
     // 创建服务器 Socket
-    std::shared_ptr<Socket> srvSocket = Socket::listen(port, maxConn);
+    std::shared_ptr<Socket> srvSocket = Socket::listen(port, maxListenQueue);
 
     if (!srvSocket) {
         exit(1);

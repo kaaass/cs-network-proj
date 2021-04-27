@@ -28,6 +28,7 @@ bool Client::sendCommand(const std::string &command) {
     if (cmds.empty()) {
         return false;
     }
+    // 协作指令
     if (cmds[0] == "download" || cmds[0] == "dl") {
         // 下载指令
         if (cmds.size() != 3) {
@@ -62,7 +63,7 @@ bool Client::sendCommand(const std::string &command) {
         }
         return ret;
     }
-    // 其他指令
+    // 远端指令
     return ProtocolHelper::sendRequest(socket, COMMAND, ByteBuffer::str(command));
 }
 
@@ -73,6 +74,8 @@ void Client::handleResponse() {
         if (resp == nullptr) {
             // 套接字关闭
             active = false;
+            printf("Connection closed\n");
+            exit(1);
             return;
         }
         // 判断

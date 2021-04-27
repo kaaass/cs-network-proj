@@ -67,6 +67,7 @@ void Session::processCommand(uint32_t readLen) {
     auto cmds = StringUtil::split(cmd, " ");
     // 解析指令
     LOG(INFO) << "Read command: " << cmd;
+    // 远端指令、协作指令的远端部分
     if (cmd == "kill") {
         // 关闭会话
         say("Bye\n");
