@@ -83,7 +83,7 @@ void Session::processCommand(uint32_t readLen) {
             return;
         }
         // 运行 ls 指令
-        auto pFile = File::popen("ls -al " + path, "r");
+        auto pFile = File::popen("ls -al '" + path + "'", "r");
         auto cmdLen = pFile->read(*readBuffer);
         if (cmdLen == 0) {
             // 目录不存在
@@ -228,6 +228,12 @@ std::string Session::validatePath(const std::string& path) const {
     char realPath[PATH_MAX];
     char curPath[PATH_MAX];
 
+    // 过滤危险字符
+    if (strpbrk(path.c_str(), "<|>&'")) {
+        say("Bad file path\n");
+        LOG(INFO) << "Malicious file path (bad char): " << path;
+        return "";
+    }
     // 转绝对地址
     realpath((shareRoot + "/" + path).c_str(), realPath);
     // 地址校验
@@ -235,6 +241,7 @@ std::string Session::validatePath(const std::string& path) const {
     strcat(curPath, ("/" + shareRoot).c_str());
     if (strncmp(realPath, curPath, strlen(curPath)) != 0) {
         say("Bad file path\n");
+        LOG(INFO) << "Malicious file path (out of dir): " << path;
         return "";
     }
 
