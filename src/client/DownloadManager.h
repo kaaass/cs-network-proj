@@ -80,6 +80,8 @@ private:
     void downloadPart();
 
 private:
+    // 线程号
+    int threadNo;
     // 下载管理
     DownloadManager *manager;
     // 缓冲区

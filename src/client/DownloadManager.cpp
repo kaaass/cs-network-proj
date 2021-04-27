@@ -8,12 +8,13 @@
 void DownloadManager::init() {
     // 初始化下载缓冲区
     for (int i = 0; i < Client::INSTANCE->downloadThreads; i++) {
-        readBuffers.push_back(std::make_shared<ByteBuffer>());
-        readBuffers[i]->allocate(READ_BUFFER_PER_THREAD);
+        readBuffers.push_back(nullptr);
     }
 }
 
 bool DownloadManager::downloadWait(const std::string &srcFile, const std::shared_ptr<File> &destFile, uint64_t size) {
+    // 初始化状态
+    printf("Initializing download...\n");
     srcPath = srcFile;
     destPath = destFile->getRealPath();
     totalProgress = 0;
@@ -52,6 +53,7 @@ bool DownloadManager::downloadWait(const std::string &srcFile, const std::shared
     usingOffsets.assign(nPart, 0);
     // 设置线程池参数：读缓冲、开始搜索位置
     for (int i = 0; i < threads.size(); i++) {
+        threads[i]->threadNo = i;
         threads[i]->readBuffer = readBuffers[i];
         threads[i]->startPart = i * nPart / threads.size();
     }
@@ -75,21 +77,29 @@ void DownloadManager::updateDownloadStatus() {
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = end - start;
     averageSpeed = double(totalProgress) / elapsed_seconds.count();
-    LOG(INFO) << "Download progress: " << double(totalProgress) / totalSize * 100 << "%, "
-        << (averageSpeed / (1024. * 1024.)) << "MB/s";
+    printf("Download progress: %.2lf%%, %.2lf MB/s\n",
+           double(totalProgress) / totalSize * 100,
+           averageSpeed / (1024. * 1024.));
     // TODO 状态文件
 }
 
 void DownloadThread::run() {
+    // 初始化缓冲区
+    if (!readBuffer) {
+        readBuffer = std::make_shared<ByteBuffer>();
+        readBuffer->allocate(READ_BUFFER_PER_THREAD);
+        // 回写 Manager 以复用下载缓冲
+        manager->readBuffers[threadNo] = readBuffer;
+    }
     // 打开线程本地用文件
     destFile = File::open(manager->destPath, "r+b");
     // 开始下载
-    bool finish = false;
+    bool finish;
     auto &partsLock = manager->partsLock;
     auto &usingOffsets = manager->usingOffsets;
     auto &parts = manager->parts;
     auto nParts = parts.size();
-    while (!finish) {
+    while (true) {
         // 找未完成块并占有
         {
             std::lock_guard<std::mutex> guard(partsLock);
