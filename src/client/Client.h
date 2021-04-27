@@ -26,7 +26,7 @@ public:
     void runRepl();
 
     // 运行指令
-    void runCommand(const std::string& command);
+    void runCommand(int argc, char **argv);
 
 private:
 

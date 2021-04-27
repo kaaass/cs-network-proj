@@ -118,7 +118,14 @@ void Client::handleDownloadInfo(const ByteBuffer &response) {
     destFile = nullptr;
 }
 
-void Client::runCommand(const std::string &command) {
+void Client::runCommand(int argc, char **argv) {
+    std::string command;
+    // 合并指令
+    for (int i = 0; i < argc; i++) {
+        if (i > 0)
+            command += ' ';
+        command += argv[i];
+    }
     // 发送指令
     bool sent = sendCommand(command);
     if (!sent) {

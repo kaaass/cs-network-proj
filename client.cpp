@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
 
     if (optind < argc) {
         // 执行单条指令
-        client.runCommand(argv[optind]);
+        client.runCommand(argc - optind, argv + optind);
     } else {
         // 启动客户端
         client.runRepl();
