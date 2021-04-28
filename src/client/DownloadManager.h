@@ -37,7 +37,7 @@ public:
 private:
 
     // 更新下载状态
-    void updateDownloadStatus();
+    void updateDownloadStatus(PartStatus *part);
 
 private:
     // 下载缓冲区
@@ -54,6 +54,8 @@ private:
     std::string srcPath;
     // 目标文件路径
     std::string destPath;
+    // 分块状态文件
+    std::shared_ptr<File> partFile;
 public:
     // 总下载进度
     std::atomic<uint64_t> totalProgress;

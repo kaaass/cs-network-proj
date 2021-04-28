@@ -37,7 +37,7 @@ int File::getFd() {
 }
 
 ssize_t File::write(const ByteBuffer &buffer, ssize_t size) {
-    return ::write(getFd(), reinterpret_cast<const void *>(buffer.data()), size);;
+    return ::write(getFd(), reinterpret_cast<const void *>(buffer.data()), size);
 }
 
 File::File(FILE *file, std::string path) : file(file), path(std::move(path)) {}
@@ -70,4 +70,12 @@ ssize_t File::read(ByteBuffer &buffer, ssize_t limit) {
 
 bool File::allocate(off_t len, off_t offset) {
     return fallocate(getFd(), 0, offset, len) != 0;
+}
+
+ssize_t File::write(uint8_t *buffer, ssize_t size) {
+    return ::write(getFd(), buffer, size);
+}
+
+bool File::remove() {
+    return ::remove(getRealPath().c_str()) == 0;
 }
