@@ -18,10 +18,8 @@
 
 ## 编译
 
-### Windows
-
-1. 安装CMake
-2. 下载源代码并解压，cd至目录
+1. 安装 CMake (Archlinux: `sudo pacman -S cmake`)
+2. 下载源代码并解压，`cd` 至目录
 3. 执行
 
 ```bash
