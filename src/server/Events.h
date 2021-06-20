@@ -2,6 +2,7 @@
 #define CS_NETWORK_EVENTS_H
 
 #include <utility>
+#include <memory>
 
 #include "Epoll.h"
 #include "Thread.h"

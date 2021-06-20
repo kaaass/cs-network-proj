@@ -1,4 +1,5 @@
 find_path(glog_SOURCE CMakeLists.txt HINTS "${CMAKE_SOURCE_DIR}/externals/glog")
+find_path(gflags_SOURCE CMakeLists.txt HINTS "${CMAKE_SOURCE_DIR}/externals/gflags")
 
 if (glog_SOURCE)
     set(glog_FOUND TRUE)
@@ -18,6 +19,24 @@ if (glog_SOURCE)
             WORKING_DIRECTORY ${glog_BUILD}
             )
 
+    # Same for gflags
+    set(gflags_BUILD "${CMAKE_CURRENT_BINARY_DIR}/gflags_build")
+    set(gflags_DISTRIBUTION "${CMAKE_CURRENT_BINARY_DIR}/gflags_distribution")
+
+    # Build gflags
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} ${gflags_BUILD})
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} ${gflags_DISTRIBUTION})
+    execute_process(COMMAND ${CMAKE_COMMAND} ${gflags_SOURCE}
+            -DCMAKE_INSTALL_PREFIX=${gflags_DISTRIBUTION}
+            -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}
+            -DBUILD_TESTING=NO
+            WORKING_DIRECTORY ${gflags_BUILD}
+            )
+    execute_process(COMMAND ${CMAKE_COMMAND} --build . --target install
+            WORKING_DIRECTORY ${gflags_BUILD}
+            )
+    ####
+
     set(glog_INCLUDE "${glog_DISTRIBUTION}/include")
 
     if (MSVC)
@@ -36,7 +55,7 @@ if (glog_SOURCE)
 #                NAMES glog
 #                PATHS ${glog_DISTRIBUTION}
 #                PATH_SUFFIXES lib lib64)
-        set(glog_LIBRARY "${glog_DISTRIBUTION}/lib/libglog.a")
+        set(glog_LIBRARY "${glog_DISTRIBUTION}/lib/libglog.a" "${gflags_DISTRIBUTION}/lib/libgflags.a")
 
         message(STATUS "${Green}Found Glog library at: ${glog_LIBRARY}${Reset}")
     endif ()
