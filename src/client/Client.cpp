@@ -65,6 +65,13 @@ bool Client::sendCommand(const std::string &command) {
     } else if (command == "quit" || command == "q" || command == "shutdown") {
         // 处理退出
         active = false;
+    } else if (cmds[0] == "confirm") {
+        // 同意下载文件
+        savePath = cmds[1];
+        nextDownload = true;
+    } else if (command == "cancel") {
+        // 拒绝下载文件
+        fileToDownload = "";
     }
     // 远端指令
     return ProtocolHelper::sendRequest(socket, COMMAND, ByteBuffer::str(command));
@@ -142,24 +149,31 @@ void Client::runCommand(int argc, char **argv) {
 void Client::runRepl() {
     // 欢迎消息
     std::string welcome =
-            "SiFtp - Simple multi-thread Ftp client\n"
-            "Version: v1.0\n";
+            "\n\nKChat - Simple p2p chat application\n"
+            "Version: v1.0\n"
+            "用法：使用 say 指令发言，send 指令传输文件";
     std::cout << welcome << std::endl;
 
     // 指令执行循环
     std::string command;
     bool sent;
     while (active) {
-        fprintf(stdout, "> ");
-        fflush(stdout);
-        // 读入键盘输入
-        std::getline(std::cin, command);
-        LOG(INFO) << "Read command: '" << command << "'";
-        // 发送指令
-        sent = sendCommand(command);
-        if (!sent) {
-            printf("Failed to send command\n");
-            continue;
+        if (!nextDownload) {
+            // 读入键盘输入
+            std::getline(std::cin, command);
+            LOG(INFO) << "Read command: '" << command << "'";
+            // 发送指令
+            sent = sendCommand(command);
+            if (!sent) {
+                // printf("Failed to send command\n");
+                continue;
+            }
+        } else {
+            // 主动下载模式
+            nextDownload = false;
+            sendCommand("dl " + fileToDownload + " " + savePath);
+            fileToDownload = "";
+            savePath = "";
         }
         // 处理返回
         handleResponse();

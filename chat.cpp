@@ -1,4 +1,5 @@
 #include <csignal>
+#include <ctime>
 #include <glog/logging.h>
 #include "src/server/Server.h"
 
@@ -8,8 +9,11 @@
 void parseParam(int argc, char **argv) {
     int opt;
     auto &server = *Server::INSTANCE;
-    while ((opt = getopt(argc, argv, "p:t:l:")) != -1) {
+    while ((opt = getopt(argc, argv, "a:p:t:l:")) != -1) {
         switch (opt) {
+            case 'a':
+                server.address = optarg;
+                break;
             case 'p':
                 server.port = std::stoi(optarg);
                 break;
@@ -20,7 +24,7 @@ void parseParam(int argc, char **argv) {
                 FLAGS_minloglevel = std::stoi(optarg);
                 break;
             default:
-                fprintf(stderr, "Usage: %s [-p port] [-t threads_count] [-l loglevel]\n",
+                fprintf(stderr, "Usage: %s [-a my_address] [-p port] [-t threads_count] [-l loglevel]\n",
                         argv[0]);
                 exit(EXIT_FAILURE);
         }
@@ -36,11 +40,13 @@ int main(int argc, char **argv) {
     auto &server = *Server::INSTANCE;
 
     // 初始化参数
+    srand(time(nullptr));
     server.threadNum = 10;
-    server.port = 8000;
+    server.port = 8000 + (rand() % 2000);
     server.maxListenQueue = 50;
+    server.address = "127.0.0.1";
     FLAGS_alsologtostderr = true;
-    FLAGS_minloglevel = 0;
+    FLAGS_minloglevel = 3;
 
     // 解析参数
     parseParam(argc, argv);
@@ -54,6 +60,9 @@ int main(int argc, char **argv) {
 
     // 启动服务器
     server.start();
+
+    // 进入 REPL
+    server.runRepl();
 
     return 0;
 }

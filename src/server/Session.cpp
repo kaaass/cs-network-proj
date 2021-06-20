@@ -3,6 +3,7 @@
 #include "Session.h"
 #include "../util/StringUtil.h"
 #include "Server.h"
+#include "../client/Client.h"
 
 #define PATH_MAX 4096
 
@@ -98,6 +99,49 @@ void Session::processCommand(uint32_t readLen) {
         // 关闭服务器
         say("Shutdown server...\n");
         Server::INSTANCE->kill();
+        return;
+    } else if (cmds[0] == "link") {
+        // 要求连接客户端
+        if (Client::INSTANCE) {
+            say("已经连接其他客户端！");
+            return;
+        }
+        // 创建客户端
+        Client::INSTANCE = std::make_unique<Client>();
+        auto &client = *Client::INSTANCE;
+        // 设置参数
+        client.srvAddress = cmds[1];
+        client.srvPort = std::stoi(cmds[2]);
+        // 初始化客户端
+        client.init();
+        client.connect();
+        // 启动客户端
+        Server::INSTANCE->clientAttached = true;
+        say("连接成功");
+        std::cout << "成功与 " << cmds[1] << " 建立连接！输入 start 开始聊天" << std::endl;
+        return;
+    } else if (cmds[0] == "say") {
+        // 发送消息
+        auto msg = cmd.substr(4, cmd.size() - 4);
+        say("[我] " + msg + "\n");
+        std::cout << "[对方] " << msg << std::endl;
+        return;
+    } else if (cmds[0] == "send") {
+        // 请求发送文件，客户端本地保存文件名
+        auto &file = cmds[1];
+        say("正在请求传输文件...\n");
+        std::cout << "对方请求传输文件 " << file << "，使用 confirm <保存路径> 同意，使用 cancel 拒绝" << std::endl;
+        Client::INSTANCE->fileToDownload = file;
+        return;
+    } else if (cmds[0] == "confirm") {
+        // 同意对方发送文件，对方主动发起下载（Client负责），本方不作操作
+        std::cout << "对方同意传输文件，请等待文件传输完成！" << std::endl;
+        say("开始传输文件...\n");
+        return;
+    } else if (cmd == "cancel") {
+        // 拒绝对方发送文件
+        std::cout << "对方拒绝传输文件！" << std::endl;
+        say("已拒绝传输文件\n");
         return;
     }
     // 否则其余指令 Echo

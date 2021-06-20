@@ -36,6 +36,8 @@ public:
     // 关闭服务器
     void kill();
 
+    void runRepl();
+
 public:
     static std::shared_ptr<Epoll> epoll;
     bool active = true;
@@ -48,8 +50,12 @@ public:
     int port;
     // 最大连接队列（accept 执行前允许维持的连接数）
     int maxListenQueue;
+    // 服务器地址
+    std::string address;
 
     static std::unique_ptr<Server> INSTANCE;
+
+    bool clientAttached = false;
 
 private:
     std::unique_ptr<ThreadPool<ServerThread>> threadPool;

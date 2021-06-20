@@ -59,6 +59,12 @@ public:
     uint16_t srvPort;
     // 下载线程数
     int downloadThreads;
+    // 要传输的文件
+    std::string fileToDownload;
+    // 保存路径
+    std::string savePath;
+    // 自动下载
+    bool nextDownload = false;
 
     static std::unique_ptr<Client> INSTANCE;
 };
