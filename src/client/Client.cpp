@@ -120,11 +120,13 @@ void Client::handleDownloadInfo(const ByteBuffer &response) {
     auto ret = downloadManager.downloadWait(srcFile, destFile, resp.size);
     // 完成写入
     if (ret) {
-        printf("Successful written %lu Bytes (%0.3lf MB/s) to file %s.\n",
+        printf("成功传输 %lu 字节 (%0.3lf MB/s) 到文件 %s.\n",
                resp.size,
                downloadManager.averageSpeed / (1024. * 1024.),
                destFile->getRealPath().c_str());
     }
+    // 提示完成传输
+    sendCommand("finish");
     destFile = nullptr;
 }
 
@@ -139,7 +141,7 @@ void Client::runCommand(int argc, char **argv) {
     // 发送指令
     bool sent = sendCommand(command);
     if (!sent) {
-        printf("Failed to send command\n");
+        fprintf(stderr, "发送指令失败\n");
         return;
     }
     // 处理返回

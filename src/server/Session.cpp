@@ -77,7 +77,7 @@ void Session::processCommand(uint32_t readLen) {
         // 列出目录内容
         // 解析参数
         if (cmds.size() != 2) {
-            say("list command takes exact 1 params!\n");
+            say("list 指令需要 1 个参数!\n");
             return;
         }
         auto path = validatePath(cmds[1]);
@@ -89,7 +89,7 @@ void Session::processCommand(uint32_t readLen) {
         auto cmdLen = pFile->read(*readBuffer);
         if (cmdLen == 0) {
             // 目录不存在
-            say("Directory not existed!\n");
+            say("目录不存在!\n");
             return;
         }
         ByteBuffer resultBuf = readBuffer->slice(0, cmdLen);
@@ -97,7 +97,7 @@ void Session::processCommand(uint32_t readLen) {
         return;
     } else if (cmd == "shutdown") {
         // 关闭服务器
-        say("Shutdown server...\n");
+        say("关闭服务器...\n");
         Server::INSTANCE->kill();
         return;
     } else if (cmds[0] == "link") {
@@ -143,9 +143,12 @@ void Session::processCommand(uint32_t readLen) {
         std::cout << "对方拒绝传输文件！" << std::endl;
         say("已拒绝传输文件\n");
         return;
+    } else if (cmd == "finish") {
+        std::cout << "传输完成！" << std::endl;
+        return;
     }
     // 否则其余指令 Echo
-    say("Unrecognised command: " + cmd + "\n");
+    say("未知命令: " + cmd + "\n");
 }
 
 void Session::processDownload(uint32_t readLen, bool infoOnly) {

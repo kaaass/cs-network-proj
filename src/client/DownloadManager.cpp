@@ -14,7 +14,7 @@ void DownloadManager::init() {
 
 bool DownloadManager::downloadWait(const std::string &srcFile, const std::shared_ptr<File> &destFile, uint64_t size) {
     // 初始化状态
-    printf("Initializing download...\n");
+    // printf("Initializing download...\n");
     srcPath = srcFile;
     destPath = destFile->getRealPath();
     totalProgress = 0;
